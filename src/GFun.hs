@@ -25,6 +25,11 @@ multSerie :: Num a => Serie a -> Serie a -> Serie a
 multSerie (Z c1 s1) (Z c2 s2) =
   Z (c1 * c2) (gmap (* c1) s2 + gmap (* c2) s1 + Z 0 (s1 * s2))
 
+derive :: Num a => Serie a -> Serie a
+derive (Z x xs) = aux xs 1
+  where
+    aux (Z c s) pow = Z (c * pow) (aux s (pow + 1))
+
 showSerie :: Show a => Serie a -> String
 showSerie s =
   let coefs = S.fromList $ prend 10 s
@@ -43,14 +48,35 @@ aux n (Z x xs) acc
 gmap :: (a -> b) -> Serie a -> Serie b
 gmap f (Z x xs) = Z (f x) (gmap f xs)
 
+succSerie :: Num a => Serie a -> Serie a
+succSerie s = aux s 0
+  where
+    aux (Z x xs) n = Z (x + n) (aux xs (n + 1))
+
+naturals :: Serie Integer
+naturals = succSerie zeros
+
+zeros :: Serie Integer
+zeros = fromInteger 0
+
 uns :: Serie Integer
 uns = Z 1 uns
 
 succs :: Serie Integer
 succs = Z 0 $ Z 1 $ Z 2 $ succs
 
+
+-- >>> naturals
+-- 0.z^0 + 1.z^1 + 2.z^2 + 3.z^3 + 4.z^4 + 5.z^5 + 6.z^6 + 7.z^7 + 8.z^8 + 9.z^9 + ...
+
+-- >>> derive $ naturals
+-- 1.z^0 + 4.z^1 + 9.z^2 + 16.z^3 + 25.z^4 + 36.z^5 + 49.z^6 + 64.z^7 + 81.z^8 + 100.z^9 + ...
+
 -- >>> uns
 -- 1.z^0 + 1.z^1 + 1.z^2 + 1.z^3 + 1.z^4 + 1.z^5 + 1.z^6 + 1.z^7 + 1.z^8 + 1.z^9 + ...
+
+-- >>> derive $ uns
+-- 1.z^0 + 2.z^1 + 3.z^2 + 4.z^3 + 5.z^4 + 6.z^5 + 7.z^6 + 8.z^7 + 9.z^8 + 10.z^9 + ...
 
 -- >>> succs
 -- 0.z^0 + 1.z^1 + 2.z^2 + 0.z^3 + 1.z^4 + 2.z^5 + 0.z^6 + 1.z^7 + 2.z^8 + 0.z^9 + ...
@@ -63,7 +89,6 @@ succs = Z 0 $ Z 1 $ Z 2 $ succs
 
 -- >>> fromInteger 5 :: Serie Int
 -- 5.z^0 + 5.z^1 + 5.z^2 + 5.z^3 + 5.z^4 + 5.z^5 + 5.z^6 + 5.z^7 + 5.z^8 + 5.z^9 + ...
-
 
 -- >>> gmap (^2) succs
 -- 0.z^0 + 1.z^1 + 4.z^2 + 0.z^3 + 1.z^4 + 4.z^5 + 0.z^6 + 1.z^7 + 4.z^8 + 0.z^9 + ...
